@@ -10,6 +10,7 @@ import UIKit
 
 class NewslistTableViewController: UITableViewController {
     
+    private var articleListViewModel: ArticleListViewModel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,25 +22,50 @@ class NewslistTableViewController: UITableViewController {
         self.view.backgroundColor = UIColor(displayP3Red: 47/255, green: 54/255, blue: 64/255, alpha: 1)
         self.navigationController?.navigationBar.prefersLargeTitles = true
         
-        
+        let url = URL(string: "https://newsapi.org/v2/top-headlines?country=us&apiKey=9d08f788c2534b3f9e400f5fd99d2bc9")!
+        Webservice().getArticles(url: url) { articles in
+            if let articles = articles {
+                self.articleListViewModel = ArticleListViewModel(articles: articles)
+                
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }
+        }
     }
     
     // MARK: - Table view data source
     
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return self.articleListViewModel == nil ? 0 : self.articleListViewModel.numberOfSections
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 100
+        return self.articleListViewModel.numberOfRowsInSection(section)
     }
-    
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "newsCell", for: indexPath) as! NewsTableViewCell
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "articleCell", for: indexPath) as? ArticleTableViewCell else {
+            fatalError("ArticleCell not found")
+        }
         
-        cell.newsTitle.text = "Noticia \(indexPath.row)"
-        cell.newsDescription.text = "Teste teste teste test"
+        let article = self.articleListViewModel.articleAtIndex(indexPath.row)
         
+        cell.titleLabel.text = article.title
+        cell.descriptionLabel.text = article.description
         return cell
     }
+//    
+//    
+//    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//        let cell = tableView.dequeueReusableCell(withIdentifier: "newsCell", for: indexPath) as! NewsTableViewCell
+//        
+//        cell.newsTitle.text = "Noticia \(indexPath.row)"
+//        cell.newsDescription.text = "Teste teste teste test"
+//        
+//        return cell
+//    }
     
     /*
      // Override to support conditional editing of the table view.
